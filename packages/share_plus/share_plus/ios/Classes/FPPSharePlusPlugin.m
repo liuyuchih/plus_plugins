@@ -2,41 +2,44 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #import "FPPSharePlusPlugin.h"
+#if __has_include("LinkPresentation/LPLinkMetadata.h")
 #import "LinkPresentation/LPLinkMetadata.h"
 #import "LinkPresentation/LPMetadataProvider.h"
+#define __HAS_LinkPresentation__
+#endif
 
 static NSString *const PLATFORM_CHANNEL = @"dev.fluttercommunity.plus/share";
 
 static UIViewController *RootViewController() {
-  if (@available(iOS 13, *)) { // UIApplication.keyWindow is deprecated
-    NSSet *scenes = [[UIApplication sharedApplication] connectedScenes];
-    for (UIScene *scene in scenes) {
-      if ([scene isKindOfClass:[UIWindowScene class]]) {
-        NSArray *windows = ((UIWindowScene *)scene).windows;
-        for (UIWindow *window in windows) {
-          if (window.isKeyWindow) {
-            return window.rootViewController;
-          }
-        }
-      }
-    }
-    return nil;
-  } else {
-    return [UIApplication sharedApplication].keyWindow.rootViewController;
-  }
+	if (@available(iOS 13, *)) { // UIApplication.keyWindow is deprecated
+		NSSet *scenes = [[UIApplication sharedApplication] connectedScenes];
+		for (UIScene *scene in scenes) {
+			if ([scene isKindOfClass:[UIWindowScene class]]) {
+				NSArray *windows = ((UIWindowScene *)scene).windows;
+				for (UIWindow *window in windows) {
+					if (window.isKeyWindow) {
+						return window.rootViewController;
+					}
+				}
+			}
+		}
+		return nil;
+	} else {
+		return [UIApplication sharedApplication].keyWindow.rootViewController;
+	}
 }
 
 static UIViewController *
 TopViewControllerForViewController(UIViewController *viewController) {
-  if (viewController.presentedViewController) {
-    return TopViewControllerForViewController(
-        viewController.presentedViewController);
-  }
-  if ([viewController isKindOfClass:[UINavigationController class]]) {
-    return TopViewControllerForViewController(
-        ((UINavigationController *)viewController).visibleViewController);
-  }
-  return viewController;
+	if (viewController.presentedViewController) {
+		return TopViewControllerForViewController(
+				viewController.presentedViewController);
+	}
+	if ([viewController isKindOfClass:[UINavigationController class]]) {
+		return TopViewControllerForViewController(
+				((UINavigationController *)viewController).visibleViewController);
+	}
+	return viewController;
 }
 
 // We need the companion to avoid ARC deadlock
@@ -53,25 +56,26 @@ TopViewControllerForViewController(UIViewController *viewController) {
 @implementation UIActivityViewSuccessCompanion
 
 - (id)initWithResult:(FlutterResult)result {
-  if (self = [super init]) {
-    self.result = result;
-    self.completed = false;
-  }
-  return self;
+	if (self = [super init]) {
+		self.result = result;
+		self.completed = false;
+	}
+	return self;
 }
 
 // We use dealloc as the share-sheet might disappear (e.g. iCloud photo album
 // creation) and could then reappear if the user cancels
 - (void)dealloc {
-  if (self.completed) {
-    self.result(self.activityType);
-  } else {
-    self.result(@"");
-  }
+	if (self.completed) {
+		self.result(self.activityType);
+	} else {
+		self.result(@"");
+	}
 }
 
 @end
 
+#if TARGET_OS_IOS
 @interface UIActivityViewSuccessController : UIActivityViewController
 
 @property UIActivityViewSuccessCompanion *companion;
@@ -80,6 +84,7 @@ TopViewControllerForViewController(UIViewController *viewController) {
 
 @implementation UIActivityViewSuccessController
 @end
+#endif
 
 @interface SharePlusData : NSObject <UIActivityItemSource>
 
@@ -99,47 +104,48 @@ TopViewControllerForViewController(UIViewController *viewController) {
                      subject:(NSString *)subject NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init
-    __attribute__((unavailable("Use initWithSubject:text: instead")));
+__attribute__((unavailable("Use initWithSubject:text: instead")));
 
 @end
 
 @implementation SharePlusData
 
 - (instancetype)init {
-  [super doesNotRecognizeSelector:_cmd];
-  return nil;
+	[super doesNotRecognizeSelector:_cmd];
+	return nil;
 }
 
 - (instancetype)initWithSubject:(NSString *)subject text:(NSString *)text {
-  self = [super init];
-  if (self) {
-    _subject = [subject isKindOfClass:NSNull.class] ? @"" : subject;
-    _text = text;
-  }
-  return self;
+	self = [super init];
+	if (self) {
+		_subject = [subject isKindOfClass:NSNull.class] ? @"" : subject;
+		_text = text;
+	}
+	return self;
 }
 
 - (instancetype)initWithFile:(NSString *)path mimeType:(NSString *)mimeType {
-  self = [super init];
-  if (self) {
-    _path = path;
-    _mimeType = mimeType;
-  }
-  return self;
+	self = [super init];
+	if (self) {
+		_path = path;
+		_mimeType = mimeType;
+	}
+	return self;
 }
 
 - (instancetype)initWithFile:(NSString *)path
                     mimeType:(NSString *)mimeType
                      subject:(NSString *)subject {
-  self = [super init];
-  if (self) {
-    _path = path;
-    _mimeType = mimeType;
-    _subject = [subject isKindOfClass:NSNull.class] ? @"" : subject;
-  }
-  return self;
+	self = [super init];
+	if (self) {
+		_path = path;
+		_mimeType = mimeType;
+		_subject = [subject isKindOfClass:NSNull.class] ? @"" : subject;
+	}
+	return self;
 }
 
+#if TARGET_OS_IOS
 - (id)activityViewControllerPlaceholderItem:
     (UIActivityViewController *)activityViewController {
   return [self
@@ -235,142 +241,144 @@ TopViewControllerForViewController(UIViewController *viewController) {
 
   return metadata;
 }
+#endif
 
 @end
 
 @implementation FPPSharePlusPlugin
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
-  FlutterMethodChannel *shareChannel =
-      [FlutterMethodChannel methodChannelWithName:PLATFORM_CHANNEL
-                                  binaryMessenger:registrar.messenger];
+	FlutterMethodChannel *shareChannel =
+			[FlutterMethodChannel methodChannelWithName:PLATFORM_CHANNEL
+			                            binaryMessenger:registrar.messenger];
 
-  [shareChannel
-      setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-        BOOL withResult = [call.method hasSuffix:@"WithResult"];
-        NSDictionary *arguments = [call arguments];
-        NSNumber *originX = arguments[@"originX"];
-        NSNumber *originY = arguments[@"originY"];
-        NSNumber *originWidth = arguments[@"originWidth"];
-        NSNumber *originHeight = arguments[@"originHeight"];
+	[shareChannel
+			setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
+				BOOL withResult = [call.method hasSuffix:@"WithResult"];
+				NSDictionary *arguments = [call arguments];
+				NSNumber *originX = arguments[@"originX"];
+				NSNumber *originY = arguments[@"originY"];
+				NSNumber *originWidth = arguments[@"originWidth"];
+				NSNumber *originHeight = arguments[@"originHeight"];
 
-        CGRect originRect = CGRectZero;
-        if (originX && originY && originWidth && originHeight) {
-          originRect =
-              CGRectMake([originX doubleValue], [originY doubleValue],
-                         [originWidth doubleValue], [originHeight doubleValue]);
-        }
+				CGRect originRect = CGRectZero;
+				if (originX && originY && originWidth && originHeight) {
+					originRect =
+							CGRectMake([originX doubleValue], [originY doubleValue],
+							           [originWidth doubleValue], [originHeight doubleValue]);
+				}
 
-        if ([@"share" isEqualToString:call.method] ||
-            [@"shareWithResult" isEqualToString:call.method]) {
-          NSString *shareText = arguments[@"text"];
-          NSString *shareSubject = arguments[@"subject"];
+				if ([@"share" isEqualToString:call.method] ||
+				    [@"shareWithResult" isEqualToString:call.method]) {
+					NSString *shareText = arguments[@"text"];
+					NSString *shareSubject = arguments[@"subject"];
 
-          if (shareText.length == 0) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"Non-empty text expected"
-                                       details:nil]);
-            return;
-          }
+					if (shareText.length == 0) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"Non-empty text expected"
+						                           details:nil]);
+						return;
+					}
 
-          UIViewController *rootViewController = RootViewController();
-          if (!rootViewController) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"No root view controller found"
-                                       details:nil]);
-            return;
-          }
-          UIViewController *topViewController =
-              TopViewControllerForViewController(rootViewController);
+					UIViewController *rootViewController = RootViewController();
+					if (!rootViewController) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"No root view controller found"
+						                           details:nil]);
+						return;
+					}
+					UIViewController *topViewController =
+							TopViewControllerForViewController(rootViewController);
 
-          [self shareText:shareText
-                     subject:shareSubject
-              withController:topViewController
-                    atSource:originRect
-                    toResult:result
-                  withResult:withResult];
-          if (!withResult)
-            result(nil);
-        } else if ([@"shareFiles" isEqualToString:call.method] ||
-                   [@"shareFilesWithResult" isEqualToString:call.method]) {
-          NSArray *paths = arguments[@"paths"];
-          NSArray *mimeTypes = arguments[@"mimeTypes"];
-          NSString *subject = arguments[@"subject"];
-          NSString *text = arguments[@"text"];
+					[self shareText:shareText
+					        subject:shareSubject
+					 withController:topViewController
+					       atSource:originRect
+					       toResult:result
+					     withResult:withResult];
+					if (!withResult)
+						result(nil);
+				} else if ([@"shareFiles" isEqualToString:call.method] ||
+				           [@"shareFilesWithResult" isEqualToString:call.method]) {
+					NSArray *paths = arguments[@"paths"];
+					NSArray *mimeTypes = arguments[@"mimeTypes"];
+					NSString *subject = arguments[@"subject"];
+					NSString *text = arguments[@"text"];
 
-          if (paths.count == 0) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"Non-empty paths expected"
-                                       details:nil]);
-            return;
-          }
+					if (paths.count == 0) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"Non-empty paths expected"
+						                           details:nil]);
+						return;
+					}
 
-          for (NSString *path in paths) {
-            if (path.length == 0) {
-              result([FlutterError errorWithCode:@"error"
-                                         message:@"Each path must not be empty"
-                                         details:nil]);
-              return;
-            }
-          }
+					for (NSString *path in paths) {
+						if (path.length == 0) {
+							result([FlutterError errorWithCode:@"error"
+							                           message:@"Each path must not be empty"
+							                           details:nil]);
+							return;
+						}
+					}
 
-          UIViewController *rootViewController = RootViewController();
-          if (!rootViewController) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"No root view controller found"
-                                       details:nil]);
-            return;
-          }
-          UIViewController *topViewController =
-              TopViewControllerForViewController(rootViewController);
-          [self shareFiles:paths
-                withMimeType:mimeTypes
-                 withSubject:subject
-                    withText:text
-              withController:topViewController
-                    atSource:originRect
-                    toResult:result
-                  withResult:withResult];
-          if (!withResult)
-            result(nil);
-        } else if ([@"shareUri" isEqualToString:call.method]) {
-          NSString *uri = arguments[@"uri"];
+					UIViewController *rootViewController = RootViewController();
+					if (!rootViewController) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"No root view controller found"
+						                           details:nil]);
+						return;
+					}
+					UIViewController *topViewController =
+							TopViewControllerForViewController(rootViewController);
+					[self shareFiles:paths
+					    withMimeType:mimeTypes
+					     withSubject:subject
+					        withText:text
+					  withController:topViewController
+					        atSource:originRect
+					        toResult:result
+					      withResult:withResult];
+					if (!withResult)
+						result(nil);
+				} else if ([@"shareUri" isEqualToString:call.method]) {
+					NSString *uri = arguments[@"uri"];
 
-          if (uri.length == 0) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"Non-empty uri expected"
-                                       details:nil]);
-            return;
-          }
+					if (uri.length == 0) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"Non-empty uri expected"
+						                           details:nil]);
+						return;
+					}
 
-          UIViewController *rootViewController = RootViewController();
-          if (!rootViewController) {
-            result([FlutterError errorWithCode:@"error"
-                                       message:@"No root view controller found"
-                                       details:nil]);
-            return;
-          }
-          UIViewController *topViewController =
-              TopViewControllerForViewController(rootViewController);
+					UIViewController *rootViewController = RootViewController();
+					if (!rootViewController) {
+						result([FlutterError errorWithCode:@"error"
+						                           message:@"No root view controller found"
+						                           details:nil]);
+						return;
+					}
+					UIViewController *topViewController =
+							TopViewControllerForViewController(rootViewController);
 
-          [self shareUri:uri
-              withController:topViewController
-                    atSource:originRect
-                    toResult:result
-                  withResult:withResult];
-        } else {
-          result(FlutterMethodNotImplemented);
-        }
-      }];
+					[self shareUri:uri
+					withController:topViewController
+					      atSource:originRect
+					      toResult:result
+					    withResult:withResult];
+				} else {
+					result(FlutterMethodNotImplemented);
+				}
+			}];
 }
 
 + (void)share:(NSArray *)shareItems
-       withSubject:(NSString *)subject
-    withController:(UIViewController *)controller
-          atSource:(CGRect)origin
-          toResult:(FlutterResult)result
-        withResult:(BOOL)withResult {
-  UIActivityViewSuccessController *activityViewController =
+  withSubject:(NSString *)subject
+withController:(UIViewController *)controller
+		atSource:(CGRect)origin
+		toResult:(FlutterResult)result
+		withResult:(BOOL)withResult {
+#if TARGET_OS_IOS
+	UIActivityViewSuccessController *activityViewController =
       [[UIActivityViewSuccessController alloc] initWithActivityItems:shareItems
                                                applicationActivities:nil];
 
@@ -420,36 +428,37 @@ TopViewControllerForViewController(UIViewController *viewController) {
   [controller presentViewController:activityViewController
                            animated:YES
                          completion:nil];
+#endif
 }
 
 + (void)shareUri:(NSString *)uri
-    withController:(UIViewController *)controller
-          atSource:(CGRect)origin
-          toResult:(FlutterResult)result
-        withResult:(BOOL)withResult {
-  NSURL *data = [NSURL URLWithString:uri];
-  [self share:@[ data ]
-         withSubject:nil
-      withController:controller
-            atSource:origin
-            toResult:result
-          withResult:withResult];
+  withController:(UIViewController *)controller
+        atSource:(CGRect)origin
+        toResult:(FlutterResult)result
+      withResult:(BOOL)withResult {
+	NSURL *data = [NSURL URLWithString:uri];
+	[self share:@[ data ]
+	withSubject:nil
+ withController:controller
+       atSource:origin
+       toResult:result
+     withResult:withResult];
 }
 
 + (void)shareText:(NSString *)shareText
-           subject:(NSString *)subject
-    withController:(UIViewController *)controller
-          atSource:(CGRect)origin
-          toResult:(FlutterResult)result
-        withResult:(BOOL)withResult {
-  NSObject *data = [[SharePlusData alloc] initWithSubject:subject
-                                                     text:shareText];
-  [self share:@[ data ]
-         withSubject:subject
-      withController:controller
-            atSource:origin
-            toResult:result
-          withResult:withResult];
+          subject:(NSString *)subject
+   withController:(UIViewController *)controller
+         atSource:(CGRect)origin
+         toResult:(FlutterResult)result
+       withResult:(BOOL)withResult {
+	NSObject *data = [[SharePlusData alloc] initWithSubject:subject
+	                                                   text:shareText];
+	[self share:@[ data ]
+	withSubject:subject
+ withController:controller
+       atSource:origin
+       toResult:result
+     withResult:withResult];
 }
 
 + (void)shareFiles:(NSArray *)paths
@@ -460,26 +469,26 @@ TopViewControllerForViewController(UIViewController *viewController) {
           atSource:(CGRect)origin
           toResult:(FlutterResult)result
         withResult:(BOOL)withResult {
-  NSMutableArray *items = [[NSMutableArray alloc] init];
+	NSMutableArray *items = [[NSMutableArray alloc] init];
 
-  for (int i = 0; i < [paths count]; i++) {
-    NSString *path = paths[i];
-    NSString *mimeType = mimeTypes[i];
-    [items addObject:[[SharePlusData alloc] initWithFile:path
-                                                mimeType:mimeType
-                                                 subject:subject]];
-  }
-  if (text != nil) {
-    NSObject *data = [[SharePlusData alloc] initWithSubject:subject text:text];
-    [items addObject:data];
-  }
+	for (int i = 0; i < [paths count]; i++) {
+		NSString *path = paths[i];
+		NSString *mimeType = mimeTypes[i];
+		[items addObject:[[SharePlusData alloc] initWithFile:path
+		                                            mimeType:mimeType
+		                                             subject:subject]];
+	}
+	if (text != nil) {
+		NSObject *data = [[SharePlusData alloc] initWithSubject:subject text:text];
+		[items addObject:data];
+	}
 
-  [self share:items
-         withSubject:subject
-      withController:controller
-            atSource:origin
-            toResult:result
-          withResult:withResult];
+	[self share:items
+	withSubject:subject
+ withController:controller
+       atSource:origin
+       toResult:result
+     withResult:withResult];
 }
 
 @end

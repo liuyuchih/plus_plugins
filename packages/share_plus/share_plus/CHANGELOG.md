@@ -1,3 +1,19 @@
+## 7.1.4
+
+- fix tvOS compatiable issue: part II
+-
+## 7.1.3
+
+- fix tvOS compatiable issue
+
+## 7.1.2
+
+- fix syntax error
+
+## 7.1.1
+
+ - To support tvOS
+
 ## 7.1.0
 
  - **FIX**(share_plus): Regenerate iOS and MacOS example apps ([#1869](https://github.com/fluttercommunity/plus_plugins/issues/1869)). ([5db20ba7](https://github.com/fluttercommunity/plus_plugins/commit/5db20ba7aebd7787a7e56df8e8e6bcb6f832f230))

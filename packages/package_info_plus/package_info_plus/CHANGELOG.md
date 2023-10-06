@@ -1,3 +1,7 @@
+## 4.1.1
+
+ - To support tvOS
+
 ## 4.1.0
 
  - **FIX**(package_info_plus): proper version.json url for files with special characters ([#2015](https://github.com/fluttercommunity/plus_plugins/issues/2015)). ([235ee391](https://github.com/fluttercommunity/plus_plugins/commit/235ee391b87e9fa06ffc6c12a8fcdb1f6b446ca5))

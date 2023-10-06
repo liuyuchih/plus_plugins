@@ -1,3 +1,7 @@
+## 9.0.4
+
+ - To support tvOS
+
 ## 9.0.3
 
  - **FIX**(device_info_plus): Regenerate iOS and MacOS example apps ([#1868](https://github.com/fluttercommunity/plus_plugins/issues/1868)). ([6e1111ac](https://github.com/fluttercommunity/plus_plugins/commit/6e1111acff40fef6f77fe2561810d679bafe938c))
