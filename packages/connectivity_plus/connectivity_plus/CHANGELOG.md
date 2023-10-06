@@ -1,3 +1,7 @@
+## 4.0.3
+
+- To support tvOS
+
 ## 4.0.2
 
  - **FIX**(connectivity_plus): Downgrade js version to work with Flutter 3.3.10 ([#1989](https://github.com/fluttercommunity/plus_plugins/issues/1989)). ([42938c0c](https://github.com/fluttercommunity/plus_plugins/commit/42938c0c03132f7f50fa047c2970660d2720d320))
