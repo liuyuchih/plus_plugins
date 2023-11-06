@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'connectivity_plus'
-  s.version          = '0.0.2'
+  s.version          = '0.0.3'
   s.summary          = 'Flutter Connectivity'
   s.description      = <<-DESC
 This plugin allows Flutter apps to discover network connectivity and configure themselves accordingly.
@@ -18,7 +18,7 @@ Downloaded by pub (not CocoaPods).
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'ReachabilitySwift'
-  s.platforms = { :ios => "12.0", :macos => "10.14", :tvos => "12.0" }
+  s.platforms = { :ios => "11.0", :macos => "10.14", :tvos => "12.0" }
   s.swift_version = '5.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
 end

@@ -1,3 +1,7 @@
+## 4.0.4
+
+- Modify iOS minimum compatible version
+
 ## 4.0.3
 
 - To support tvOS
