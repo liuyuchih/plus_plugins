@@ -1,3 +1,7 @@
+## 7.1.5
+
+- downgrade androidx.core:core-ktx
+
 ## 7.1.4
 
 - fix tvOS compatiable issue: part II
