@@ -1,3 +1,7 @@
+## 4.1.2
+
+- Fix Nullable check (AGP 8+) on Android
+
 ## 4.1.1
 
  - To support tvOS
